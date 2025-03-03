@@ -3,7 +3,7 @@ import cv2
 import torch
 import argparse
 from facenet_pytorch import MTCNN, InceptionResnetV1
-from utils import *
+from src.utils import *
 
 def get_args():
     parser = argparse.ArgumentParser("Face verification")
