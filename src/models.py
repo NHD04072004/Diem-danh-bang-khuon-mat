@@ -59,7 +59,7 @@ class Attendance(BaseModel):
     student_id = Column(String(20), ForeignKey('user.user_id'), nullable=False)
     status = Column(Enum(Status), nullable=True)
     attendance_time = Column(DateTime, nullable=True, default=datetime.now())
-    course_id = Column(Integer, ForeignKey('courses.id'), nullable=False)
+    course_id = Column(String(50), ForeignKey('courses.course_id'), nullable=False)
 
     __table_args__ = (
         Index('attendance_time_index', 'attendance_time'),
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     with app.app_context():
         db.drop_all()
         print("drop done")
-        db.create_all()
+        # db.create_all()
     #
     #     admin = User(
     #         user_id = "ADMIN001",
