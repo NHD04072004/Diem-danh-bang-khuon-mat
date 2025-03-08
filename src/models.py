@@ -72,8 +72,8 @@ class Attendance(BaseModel):
 class Course_Students(BaseModel):
     __tablename__ = 'course_students'
 
-    course_id = Column(Integer, ForeignKey('courses.id'), nullable=False)
-    student_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    course_id = Column(String(50), ForeignKey('courses.course_id'), nullable=False)
+    student_id = Column(String(20), ForeignKey('user.user_id'), nullable=False)
 
     def __str__(self):
         return f"Course id: {self.course_id} - Student id {self.student_id}"
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     with app.app_context():
         db.drop_all()
         print("drop done")
-        # db.create_all()
+        db.create_all()
     #
     #     admin = User(
     #         user_id = "ADMIN001",
