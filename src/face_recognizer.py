@@ -37,27 +37,27 @@ class FaceNet:
         :param faces (List[Dict]): Danh sách các khuôn mặt được phát hiện.
         :return: None
         """
-        orig_h, orig_w = img.shape[:2]
-        new_w, new_h = 640, 480
-
-        img_resized = cv2.resize(img, (new_w, new_h))
-
-        scale_x = new_w / orig_w
-        scale_y = new_h / orig_h
+        # orig_h, orig_w = img.shape[:2]
+        # new_w, new_h = 640, 480
+        #
+        # img_resized = cv2.resize(img, (new_w, new_h))
+        #
+        # scale_x = new_w / orig_w
+        # scale_y = new_h / orig_h
 
         x, y, w, h = face["bounding_box"]
         confidence = face["confidence"]
+        #
+        # x = int(x * scale_x)
+        # y = int(y * scale_y)
+        # w = int(w * scale_x)
+        # h = int(h * scale_y)
 
-        x = int(x * scale_x)
-        y = int(y * scale_y)
-        w = int(w * scale_x)
-        h = int(h * scale_y)
-
-        cv2.rectangle(img_resized, (x, y), (w, h), (0, 255, 0), 2)
-        cv2.putText(img_resized, f"{confidence:.2f}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0),
+        cv2.rectangle(img, (x, y), (w, h), (0, 255, 0), 2)
+        cv2.putText(img, f"{confidence:.2f}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0),
                     2)
 
-        cv2.imshow("Detected faces", img_resized)
+        cv2.imshow("Detected faces", img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 

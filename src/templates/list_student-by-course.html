@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách sinh viên</title>
+</head>
+<body>
+    <h2>Danh sách sinh viên</h2>
+
+    <form method="GET" action="/students">
+        <label for="course_id">Chọn khóa học:</label>
+        <select name="course_id" id="course_id" onchange="this.form.submit()">
+            <option value="">-- Chọn khóa học --</option>
+            {% for course in courses %}
+                <option value="{{ course.course_id }}" {% if selected_course == course.course_id %}selected{% endif %}>
+                    {{ course.name_course }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+
+    {% if students %}
+        <table>
+            <tr>
+                <th>Mã sinh viên</th>
+                <th>Họ và tên</th>
+                <th>Email</th>
+            </tr>
+            {% for student in students %}
+            <tr>
+                <td>{{ student.user_id }}</td>
+                <td>{{ student.name }}</td>
+                <td>{{ student.email }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>Chưa có sinh viên nào trong khóa học này.</p>
+    {% endif %}
+</body>
+</html>

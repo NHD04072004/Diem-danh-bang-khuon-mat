@@ -81,7 +81,7 @@ def add_course(course_id, name_course, start_time, end_time, teacher_id):
     db.session.commit()
     print(f"Added course: {course.name_course} of {teacher_id}")
 
-def get_all_course():
+def get_all_courses():
     course = db.session.query(
         Courses.course_id,
         Courses.name_course,
@@ -116,9 +116,9 @@ def add_user_to_course(student_id, course_id):
     print(f"Added {student_id} to {course_id}")
 
 def get_all_student_by_course_id(course_id: str):
-    students = db.session.query(
-        Course_Students.student_id
-    ).filter(Course_Students.course_id == course_id)
+    students = (db.session.query(
+        User.user_id, User.name, User.email
+    ).join(Course_Students, User.user_id == Course_Students.student_id).filter(Course_Students.course_id == course_id))
     return students.all()
 
 def check_login(username, password, role=UserRole.STUDENT):
@@ -171,7 +171,6 @@ def check_in(image: np.ndarray, course_id: str):
         n_results=1
     )
     print(results)
-
     if results["distances"][0][0] < 0.5:
         user_id = results["metadatas"][0][0]["user_id"]
 
@@ -216,13 +215,12 @@ def check_in(image: np.ndarray, course_id: str):
             unrecognized += 1
     else:
         unrecognized += 1
-
     attendance_results["unrecognized_faces"] = unrecognized
 
     if attendance_results["recognized_students"]:
         attendance_results["success"] = True
         attendance_results["message"] = "Điểm danh thành công."
     elif unrecognized > 0:
-        attendance_results["message"] = f"{unrecognized} face(s) detected but not recognized."
+        attendance_results["message"] = f"Không có sinh viên này!"
 
     return attendance_results

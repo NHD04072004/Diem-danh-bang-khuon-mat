@@ -42,21 +42,17 @@ def test_check_in():
 def test_add_student_course():
     add_user_to_course("22A1001D0049", "CSDL0012024")
 
-
 def test_get_all_student_by_course_id():
+    student = []
     a = get_all_student_by_course_id("CSDL0012024")
     for i in a:
-        print(i)
+        student.append(i)
+    print(student)
 
 def test_chromadb():
     client = chromadb.PersistentClient("./face_embedding_db")
     collection = client.get_or_create_collection(name="user_embeddings")
-
-    # Lấy tất cả bản ghi trong collection
     all_records = collection.get()
-
-    # Hiển thị kết quả
-    print(all_records["embeddings"])
     print(all_records)
 
 if __name__ == "__main__":
@@ -69,7 +65,6 @@ if __name__ == "__main__":
         # test_load_avatar_from_db_by_id()
         # test_add_course()
         # test_get_all_course()
-        # test_track()
         # test_get_all_attendance()
         test_check_in()
         # test_add_student_course()
