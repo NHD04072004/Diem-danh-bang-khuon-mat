@@ -1,10 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+{% block css %}
+<link href="{{ url_for('static', filename='css/style.css') }}"
+      rel="stylesheet">
+{% endblock %}
+<header class="header" data-header>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-item nav-link" id="login-user" href="/login-user">Đăng nhập</div>
+        </nav>
+    </div>
+</header>

@@ -1,5 +1,4 @@
-from app.models import *
-from app import app, db
+from src.routes import app, db
 from sqlalchemy.exc import IntegrityError
 
 def user_test():

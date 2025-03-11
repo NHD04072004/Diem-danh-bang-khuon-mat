@@ -20,14 +20,6 @@ def get_all_user_by_role(role: str):
 
     return sinhvien.all()
 
-# def create_embedding_for_user(avatar_img: np.ndarray):
-#     facenet = FaceNet()
-#     face = facenet.face_detection(avatar_img)
-#     x, y, w, h = face["bounding_box"]
-#     face_img = avatar_img[y:h, x:w]
-#     embedding = facenet.face_embedding(face_img)
-#
-
 def add_user(user_id, name, email, password, **kwargs):
     avatar = kwargs.get('avatar')
     role = kwargs.get('role')
@@ -51,19 +43,25 @@ def add_user(user_id, name, email, password, **kwargs):
     if avatar:
         client = chromadb.PersistentClient('./face_embedding_db')
         collection = client.get_or_create_collection(name='user_embeddings')
-        img = load_image_from_url(avatar)
+        if avatar.startswith("http://") or avatar.startswith("https://"):
+            img = load_image_from_url(avatar)
+        else:
+            img = cv2.imread(avatar)
         facenet = FaceNet()
         face = facenet.face_detection(img)
         x, y, w, h = face["bounding_box"]
         face_img = img[y:h, x:w]
-        avatar_embedding = facenet.face_embedding(face_img)
-        avatar_embedding = avatar_embedding.tolist()
+        avatar_embedding = facenet.face_embedding(face_img).numpy().tolist()
+        print("day la avatar", avatar_embedding)
         collection.upsert(
             ids=[user_id],
             embeddings=[avatar_embedding],
+            documents=[avatar],
             metadatas=[{"user_id": user_id}]
         )
         print("Has avatar")
+        # facenet.face_display(img, face)
+
     else:
         print("Has not avatar")
         db.session.commit()
@@ -99,48 +97,132 @@ def get_avatar_from_db_by_user_id(user_id):
 
     return user.avatar
 
-def track(course_id: str, image: np.ndarray) -> Tuple[bool, str]:
+def get_all_attendance():
+    attendance = db.session.query(
+        Attendance.id,
+        Attendance.attendance_time,
+        Attendance.student_id,
+        Attendance.status
+    )
+    return attendance.all()
+
+def add_user_to_course(student_id, course_id):
+    student_course = Course_Students(
+        course_id=course_id,
+        student_id=student_id
+    )
+    db.session.add(student_course)
+    db.session.commit()
+    print(f"Added {student_id} to {course_id}")
+
+def get_all_student_by_course_id(course_id: str):
+    students = db.session.query(
+        Course_Students.student_id
+    ).filter(Course_Students.course_id == course_id)
+    return students.all()
+
+def check_login(username, password, role=UserRole.STUDENT):
+    if username and password:
+
+        return User.query.filter(User.email.__eq__(username),
+                                 User.password_hash.__eq__(password),
+                                 User.role.__eq__(role)).first()
+
+def check_in(image: np.ndarray, course_id: str):
     """
-    Điểm danh bàng khuôn mặt rồi lưu vào bảng attendance
-    :param course_id (str): ID của lớp học đó
-    :param image (np.ndarray): Ảnh đầu vào từ camera
-    :return: Tuple[bool, str]: Điểm danh thành công hay không, thông báo
+    Records attendance using facial recognition and saves to the attendance database.
+    Parameters:
+        image (np.ndarray): Hình ảnh được tải lên từ camera
+        course_id (str): ID lớp học muốn điêm danh
+
+    Returns:
+        dict: Results of the attendance process, including recognized students and status
     """
-    facenet = FaceNet()
+    attendance_results = {
+        "success": False,
+        "recognized_students": [],
+        "unrecognized_faces": 0,
+        "message": ""
+    }
+
     client = chromadb.PersistentClient('./face_embedding_db')
     collection = client.get_or_create_collection(name='user_embeddings')
+    facenet = FaceNet()
+    faces = facenet.face_detection(image)
 
-    face_detection = facenet.face_detection(image)
-    confidence = face_detection['confidence']
-    if confidence < 0.8:
-        return False, f"Độ tin cậy thấp ({confidence:.2f})!"
-    x, y, w, h = face_detection["bounding_box"]
+    if not faces:
+        attendance_results["message"] = "Không phát hiện được khuôn mặt nào trong ảnh này."
+        return attendance_results
+
+    course = Courses.query.filter_by(course_id=course_id).first()
+    if not course:
+        attendance_results["message"] = f"Không thể tìm thấy lớp học {course_id}."
+        return attendance_results
+
+    unrecognized = 0
+    current_time = datetime.now()
+
+    x, y, w, h = faces["bounding_box"]
     face_img = image[y:h, x:w]
-    embedding = facenet.face_embedding(face_img)
+    face_embedding = facenet.face_embedding(face_img).tolist()
 
     results = collection.query(
-        query_embeddings=[embedding.tolist()],
+        query_embeddings=[face_embedding],
         n_results=1
     )
+    print(results)
+
     if results["distances"][0][0] < 0.5:
-        user_id = results['metadatas'][0][0]['user_id']
-        user = db.session.query(User).filter_by(user_id=user_id).first()
-        if user:
-            today = datetime.now().date()
-            existing = db.session.query(Attendance).filter(
-                Attendance.student_id == user.id,
-                Attendance.course_id == course_id,
-                db.func.date(Attendance.attendance_time) == today
+        user_id = results["metadatas"][0][0]["user_id"]
+
+        student = User.query.filter_by(user_id=user_id).first()
+
+        if student and student.role == UserRole.STUDENT:
+            enrollment = Course_Students.query.filter_by(
+                course_id=course.course_id,
+                student_id=student.user_id
             ).first()
-            if existing:
-                return False, f"Sinh viên {user_id} đã điểm danh hôm nay!"
-            attendance = Attendance(
-                student_id=user.user_id,
-                course_id=course_id,
-                status=Status.PRESENT,
-                attendance_time=datetime.now()
-            )
-            db.session.add(attendance)
-            db.session.commit()
-            return True, f"Điểm danh thành công cho {user_id}!"
-    return False, "Không nhận diện được sinh viên!"
+
+            if enrollment:
+                today_start = datetime.combine(current_time.date(), datetime.min.time())
+                today_end = datetime.combine(current_time.date(), datetime.max.time())
+
+                existing_attendance = Attendance.query.filter(
+                    Attendance.student_id == user_id,
+                    Attendance.course_id == course_id,
+                    Attendance.attendance_time.between(today_start, today_end)
+                ).first()
+
+                if not existing_attendance:
+                    attendance = Attendance(
+                        student_id=user_id,
+                        course_id=course_id,
+                        status=Status.PRESENT,
+                        attendance_time=current_time
+                    )
+                    db.session.add(attendance)
+                    db.session.commit()
+
+                    attendance_results["recognized_students"].append({
+                        "student_id": user_id,
+                        "name": student.name,
+                        "status": "Present"
+                    })
+                else:
+                    attendance_results["message"] = f"Sinh viên {student.name} đã điểm danh hôm nay."
+            else:
+                attendance_results["message"] = f"Sinh viên {student.name} không tồn tại trong lớp học này."
+        else:
+            unrecognized += 1
+    else:
+        unrecognized += 1
+
+    attendance_results["unrecognized_faces"] = unrecognized
+
+    if attendance_results["recognized_students"]:
+        attendance_results["success"] = True
+        attendance_results["message"] = "Điểm danh thành công."
+    elif unrecognized > 0:
+        attendance_results["message"] = f"{unrecognized} face(s) detected but not recognized."
+
+    return attendance_results

@@ -14,7 +14,7 @@ class FaceNet:
         """
         Phát hiện khuôn mặt từ ảnh đầu vào
         :param: image(np.ndarray): hình ảnh được đọc từ OpenCV
-        :return: List[Dict]: Danh sách tọa độ khuôn mặt, điểm confidence
+        :return: Dict: Tọa độ khuôn mặt, điểm confidence
         """
         faces = {}
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -37,18 +37,33 @@ class FaceNet:
         :param faces (List[Dict]): Danh sách các khuôn mặt được phát hiện.
         :return: None
         """
+        orig_h, orig_w = img.shape[:2]
+        new_w, new_h = 640, 480
+
+        img_resized = cv2.resize(img, (new_w, new_h))
+
+        scale_x = new_w / orig_w
+        scale_y = new_h / orig_h
+
         x, y, w, h = face["bounding_box"]
         confidence = face["confidence"]
 
-        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(img, f"{confidence:.2f}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        cv2.imshow("Detected faces", img)
+        x = int(x * scale_x)
+        y = int(y * scale_y)
+        w = int(w * scale_x)
+        h = int(h * scale_y)
+
+        cv2.rectangle(img_resized, (x, y), (w, h), (0, 255, 0), 2)
+        cv2.putText(img_resized, f"{confidence:.2f}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0),
+                    2)
+
+        cv2.imshow("Detected faces", img_resized)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
     def face_embedding(self, face_img: np.ndarray) -> torch.Tensor:
         """
-        Embedding khuôn mặt
+        Embedding hình ảnh khuôn mặt
         :param face_img (np.ndarray): Hình ảnh khuôn mặt sau khi được cắt [y:h, x:w]
         :return: torch.Tensor: embedding của khuôn mặt
         """
