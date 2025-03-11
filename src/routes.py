@@ -11,8 +11,13 @@ UPLOAD_FOLDER = "src/static/images"
 def home():
     return render_template('index.html')
 
-@app.route("/students", methods=["GET"])
-def students():
+@app.route('/students', methods=['get'])
+def get_all_students():
+    list_sinhvien = get_all_user_by_role('student')
+    return render_template('students.html', students=list_sinhvien)
+
+@app.route("/students-in-course", methods=["GET"])
+def students_in_course():
     course_id = request.args.get("course_id")
     courses = get_all_courses()
     students_list = get_all_student_by_course_id(course_id) if course_id else []

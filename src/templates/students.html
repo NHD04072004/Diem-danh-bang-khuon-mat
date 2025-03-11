@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    {% if students %}
+        <table>
+            <tr>
+                <th>Mã sinh viên</th>
+                <th>Họ và tên</th>
+                <th>Email</th>
+            </tr>
+            {% for student in students %}
+            <tr>
+                <td>{{ student.user_id }}</td>
+                <td>{{ student.name }}</td>
+                <td>{{ student.email }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+</body>
+</html>
