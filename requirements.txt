@@ -1,0 +1,11 @@
+facenet-pytorch
+opencv-python
+numpy
+torch
+chromadb
+flask
+flask-sqlalchemy
+flask-login
+flask-admin
+python-dotenv
+pymysql

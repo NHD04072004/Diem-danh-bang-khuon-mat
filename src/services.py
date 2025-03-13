@@ -1,4 +1,3 @@
-from typing import Tuple
 import numpy as np
 from src.models import *
 from src.face_recognizer import FaceNet
@@ -19,6 +18,9 @@ def get_all_user_by_role(role: str):
     ).filter(User.role == role)
 
     return sinhvien.all()
+
+def get_user_by_id(user_id):
+    return User.query.get(user_id)
 
 def add_user(user_id, name, email, password, **kwargs):
     avatar = kwargs.get('avatar')
@@ -52,7 +54,7 @@ def add_user(user_id, name, email, password, **kwargs):
         x, y, w, h = face["bounding_box"]
         face_img = img[y:h, x:w]
         avatar_embedding = facenet.face_embedding(face_img).numpy().tolist()
-        print("day la avatar", avatar_embedding)
+
         collection.upsert(
             ids=[user_id],
             embeddings=[avatar_embedding],
@@ -66,6 +68,15 @@ def add_user(user_id, name, email, password, **kwargs):
         print("Has not avatar")
         db.session.commit()
     print(f"Added user: {user.user_id}")
+
+def delete_user(user_id):
+    user = User.query.filter(User.user_id.__eq__(user_id)).first()
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+        print("Deleted")
+    else:
+        print("Người này không tồn tại!")
 
 def add_course(course_id, name_course, start_time, end_time, teacher_id):
     start_time = datetime.strptime(start_time, '%d-%m-%Y %H:%M')
@@ -116,15 +127,22 @@ def add_user_to_course(student_id, course_id):
     print(f"Added {student_id} to {course_id}")
 
 def get_all_student_by_course_id(course_id: str):
-    students = (db.session.query(
+    students = db.session.query(
         User.user_id, User.name, User.email
-    ).join(Course_Students, User.user_id == Course_Students.student_id).filter(Course_Students.course_id == course_id))
+    ).join(Course_Students, User.user_id == Course_Students.student_id).filter(Course_Students.course_id == course_id)
     return students.all()
 
-def check_login(username, password, role=UserRole.STUDENT):
-    if username and password:
+def get_all_course_by_user(user_id):
+    courses = db.session.query(
+        Courses.course_id, Courses.name_course, Courses.start_time, Courses.end_time, User.name
+    ).join(Course_Students, Courses.course_id == Course_Students.course_id) \
+    .join(User, Courses.teacher_id == User.user_id) \
+    .filter(Course_Students.student_id == user_id)
+    return courses.all()
 
-        return User.query.filter(User.email.__eq__(username),
+def check_login(email, password, role=UserRole.STUDENT):
+    if email and password:
+        return User.query.filter(User.email.__eq__(email),
                                  User.password_hash.__eq__(password),
                                  User.role.__eq__(role)).first()
 

@@ -1,6 +1,6 @@
-from flask import render_template, request, redirect, url_for, jsonify
+from flask import render_template, request, redirect, url_for, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
-from src import app
+from src import app, login
 import os
 import cv2
 from src.services import *
@@ -21,31 +21,62 @@ def students_in_course():
     course_id = request.args.get("course_id")
     courses = get_all_courses()
     students_list = get_all_student_by_course_id(course_id) if course_id else []
-    return render_template("list_student-by-course.html", students=students_list, courses=courses, selected_course=course_id)
+    return render_template("list_student_by_course.html", students=students_list, courses=courses, selected_course=course_id)
+
+@app.route("/courses/<user_id>")
+def get_course_by_user(user_id):
+    courses = get_all_course_by_user(user_id)
+    if not courses:
+        return jsonify({'message': 'Không có khóa học nào của sinh viên'}), 404
+    return render_template("get_courses_by_student.html", courses=courses)
 
 @app.route('/user-login', methods=['GET', 'POST'])
 def user_signin():
     err_msg = ""
-
     if request.method == 'POST':
-        username = request.form.get('username')
+        email = request.form.get('email')
         password = request.form.get('password')
-
-        user = check_login(username=username, password=password)
+        user = check_login(email=email, password=password)
         if user:
             login_user(user=user)
             next = request.args.get('next', 'home')
             return redirect(url_for(next))
         else:
-            err_msg = "Sai tên đăng nhập hoặc mật khẩu"
+            err_msg = "Sai tên đăng nhập hoặc mật khẩu!"
 
     return render_template('login.html', err_msg=err_msg)
 
+@login.user_loader
+def user_load(user_id):
+    return get_user_by_id(user_id=user_id)
+
+@app.route('/user-logout')
+def user_signout():
+    logout_user()
+    return redirect(url_for('home'))
+
+@app.route('/register', methods=['get', 'post'])
+def user_register():
+    err_msg = ''
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm = request.form.get('confirm')
+        user_id = email.split('@')[0]
+        if str(password) == str(confirm):
+            avatar = request.files.get('avatar')
+            add_user(user_id=user_id, name=name, email=email, password=password, avatar=avatar)
+            return redirect(url_for('admin'))
+        else:
+            err_msg = "Mật khẩu không khớp!"
+
+    return render_template('register.html', err_msg=err_msg)
+
 @app.route("/attendance", methods=["POST", "GET"])
 def attendance():
-    if request.method == 'GET':
-        return render_template('attendance.html')
-    elif request.method == 'POST':
+    course_id = request.args.get('course_id', '').strip()
+    if request.method == 'POST':
         course_id = request.form.get('course_id').strip()
         image_file = request.files.get('file')
         file_name = image_file.filename
@@ -57,7 +88,7 @@ def attendance():
             results = check_in(img, course_id)
         else:
             os.remove(file_path)
-            return render_template('attendance.html', result=None, message=None)
+            return render_template('attendance.html', message=None, course_id=course_id)
         os.remove(file_path)
-        return render_template('attendance.html', result=results["success"], message=results["message"])
-    return render_template('attendance.html', result=None, message=None)
+        return render_template('attendance.html', message=results["message"], course_id=course_id)
+    return render_template('attendance.html', message=None, course_id=course_id)

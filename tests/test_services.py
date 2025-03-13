@@ -14,6 +14,9 @@ def test_add_user():
     add_user("sv1", "thai", "23a1001d0049@hou.edu.vn", 'dang', role='student', avatar='du_lieu_test/z6370478038827_79df70a4186542485a50e4d4a2fe4522.jpg')
     add_user("22A1001D0027", "Vũ Hoàng Anh", "22A1001D0027@hou.edu.vn", 'hanh', role='student', avatar='https://static-images.vnncdn.net/vps_images_publish/000001/000003/2025/1/20/ngan-ngam-thay-ca-si-jack-j97-72911.jpg?width=0&s=OQaz1tZ-7uFLA8UTXffWFQ')
 
+def test_delete_user():
+    delete_user('22A1001D0052')
+
 def test_load_avatar_from_db_by_id():
     print(get_avatar_from_db_by_user_id("22A1001D0027"))
 
@@ -57,21 +60,30 @@ def test_chromadb():
     all_records = collection.get()
     print(all_records)
 
+def test_get_all_course_by_user():
+    courses = get_all_course_by_user("22A1001D0049")
+    for course in courses:
+        print(course.name)
+
 if __name__ == "__main__":
     with app.app_context():
-        db.drop_all()
-        db.create_all()
+        # db.drop_all()
+        # db.create_all()
         # test_get_all_user('teacher')
         # test_get_all_user('student')
-        test_add_user()
+        # test_add_user()
         # test_load_avatar_from_db_by_id()
-        test_add_course()
+        # test_add_course()
         # test_get_all_course()
-        # test_get_all_attendance()
+        test_get_all_attendance()
         # test_check_in()
-        test_add_student_course()
+        # test_add_student_course()
         # test_get_all_student_by_course_id()
         # test_chromadb()
         # pass
+        # test_get_all_course_by_user()
+        # test_delete_user()
+        # test_get_all_user('student')
+
     # img = cv2.imread("du_lieu_test/z6369860169727_eb3e3a6c973400ff110e785900d05f70.jpg")
     # print(img)

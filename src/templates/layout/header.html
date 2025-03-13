@@ -4,8 +4,43 @@
 {% endblock %}
 <header class="header" data-header>
     <div class="container">
-        <nav class="navbar">
-            <div class="nav-item nav-link" id="login-user" href="/login-user">Đăng nhập</div>
-        </nav>
+        <a href="{{ url_for('home') }}" class="logo text-decoration-none">
+            <img src="{{ url_for('static', filename='images/hou-logo.png') }}" alt="Logo HOU" width="100" height="120">
+        </a>
+
+        {% if current_user.is_authenticated %}
+            <div class="text-center">
+                <nav class="navbar navbar-expand-lg" data-navbar>
+                    <div class="navbar-collapse" id="navbarNav">
+                        <ul class="navbar-list navbar-nav">
+                            <li class="navbar-item">
+                                <a href="{{ url_for('home') }}" class="navbar-link active text-decoration-none" data-nav-link>
+                                    <i class='bx bxs-home'></i>Trang chủ</a>
+                            </li>
+                            <li class="navbar-item">
+                                <a href="{{ url_for('get_course_by_user', user_id=current_user.user_id) }}" class="navbar-link text-decoration-none" data-nav-link>
+                                    <i class="bx bxs-book"></i>Danh sách lớp học của bạn</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+            <div class="text-end">
+                <a href="{{ url_for('user_signout') }}" class="btn has-before">
+                    <span class="span">Đăng xuất</span>
+                </a>
+            </div>
+        {% endif %}
+
+        {% if not current_user.is_authenticated %}
+        <div class="text-end">
+            <a href="{{ url_for('user_signin') }}" class="btn has-before">
+                <span class="span">Đăng nhập</span>
+            </a>
+            <a href="{{ url_for('user_register') }}" class="btn has-before">
+                <span class="span">Đăng ký</span>
+            </a>
+        </div>
+        {% endif %}
     </div>
 </header>
