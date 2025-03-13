@@ -9,7 +9,6 @@ DB_HOST=<db_host>
 DB_NAME=<db_name>
 ```
 
-<<<<<<< HEAD
 ### Cài đặt các gói thư viện sử dụng
 
 ```commandline
@@ -34,6 +33,7 @@ python main.py
 - Cần CSS giao diện
 - Khóa vị trí cần điểm danh
 - Tích hợp với phần mềm quản lý sinh viên
-=======
-[!demo](https://www.youtube.com/watch?v=kBvZfjFUDYM)
->>>>>>> 53d1303c0dec2f19ba1012bdfed13c2107249728
+
+[![Watch the video](https://img.youtube.com/vi/kBvZfjFUDYM/hqdefault.jpg)](https://www.youtube.com/watch?v=kBvZfjFUDYM)
+
+
