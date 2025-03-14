@@ -146,6 +146,12 @@ def check_login(email, password, role=UserRole.STUDENT):
                                  User.password_hash.__eq__(password),
                                  User.role.__eq__(role)).first()
 
+def check_admin_login(email, password):
+    if email and password:
+        return User.query.filter(User.email.__eq__(email),
+                                 User.password_hash.__eq__(password),
+                                 User.role != UserRole.STUDENT).first()
+
 def check_in(image: np.ndarray, course_id: str):
     """
     Records attendance using facial recognition and saves to the attendance database.

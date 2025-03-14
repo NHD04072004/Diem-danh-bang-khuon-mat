@@ -1,6 +1,7 @@
 from flask import render_template, request, redirect, url_for, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
 from src import app, login
+from src.admin import *
 import os
 import cv2
 from src.services import *
@@ -45,6 +46,16 @@ def user_signin():
             err_msg = "Sai tên đăng nhập hoặc mật khẩu!"
 
     return render_template('login.html', err_msg=err_msg)
+
+@app.route('/admin-login', methods=['POST'])
+def admin_login():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    user = check_admin_login(email=email, password=password)
+    if user:
+        login_user(user=user)
+    return redirect('/admin')
+
 
 @login.user_loader
 def user_load(user_id):

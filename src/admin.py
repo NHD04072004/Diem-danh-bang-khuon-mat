@@ -1,39 +1,23 @@
-from src import db, app
+from src import db, app, admin
 from flask_admin.contrib.sqla import ModelView
-from flask_admin import Admin, BaseView, expose, AdminIndexView
+from flask_admin import BaseView, expose, AdminIndexView
 from flask_login import current_user, logout_user
-from src.models import UserRole
+from src.models import *
 from flask import redirect
+
+class AuthenticatedBaseView(BaseView):
+    def is_accessible(self):
+        return current_user.is_authenticated
 
 class AuthenticatedModelView(ModelView):
     def is_accessible(self):
-        return current_user.is_authenticated and \
-            (current_user.userRole == UserRole.ADMIN or current_user.userRole == UserRole.TEACHER)
+        return current_user.is_authenticated and current_user.role == UserRole.ADMIN
 
-class MyAdminIndex(AdminIndexView):
-    @expose('/')
-    def index(self):
-        return self.render('admin/index.html')
-
-class LogoutView(BaseView):
+class LogoutView(AuthenticatedBaseView):
     @expose('/')
     def index(self):
         logout_user()
         return redirect('/admin')
 
-    def is_accessible(self):
-        return current_user.is_authenticated
-
-class Register(BaseView):
-    @expose('/')
-    def __index__(self):
-
-        return redirect('/register')
-
-    def is_accessible(self):
-        return current_user.is_authenticated and \
-            (current_user.userRole == UserRole.ADMIN or current_user.userRole == UserRole.TEACHER)
-
-admin = Admin(app=app, name='QUẢN TRỊ ĐIỂM DANH SINH VIÊN', template_mode='bootstrap4', index_view=MyAdminIndex())
-admin.add_view(Register(name='Đăng ký'))
+admin.add_view(AuthenticatedModelView(User, db.session, name='Người dùng'))
 admin.add_view(LogoutView(name='Đăng xuất'))

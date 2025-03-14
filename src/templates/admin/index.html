@@ -1,10 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'admin/base.html' %}
 
-</body>
-</html>
+{% block body %}
+
+{% if current_user.is_authenticated %}
+<h1 class="text-center">Hê lô người đẹp</h1>
+{% else %}
+<form action="{{ url_for('admin_login') }}" method="post">
+  <div class="form-group">
+    <label for="email">Email address:</label>
+    <input type="email" class="form-control" placeholder="Enter email" name="email" id="email">
+  </div>
+  <div class="form-group">
+    <label for="password">Password:</label>
+    <input type="password" class="form-control" placeholder="Enter password" name="password" id="password">
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endif %}
+{% endblock %}
