@@ -19,5 +19,13 @@ class LogoutView(AuthenticatedBaseView):
         logout_user()
         return redirect('/admin')
 
+class Register(AuthenticatedBaseView):
+    @expose('/')
+    def __index__(self):
+
+        return redirect('/register')
+
+
 admin.add_view(AuthenticatedModelView(User, db.session, name='Người dùng'))
+admin.add_view(Register(name='Đăng ký'))
 admin.add_view(LogoutView(name='Đăng xuất'))
