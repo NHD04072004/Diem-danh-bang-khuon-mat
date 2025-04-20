@@ -2,5 +2,8 @@
 env
 .idea
 src/__pycache__
+__pycache__/
 face_embedding_db
 tests/face_embedding_db
+temp
+attendance_temp

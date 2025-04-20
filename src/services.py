@@ -1,5 +1,7 @@
+from src import db
 import numpy as np
-from src.models import *
+from src.models import Courses, Course_Students, Attendance, Status, User, UserRole
+from datetime import datetime, timedelta
 from src.face_recognizer import FaceNet
 import cv2
 from src.utils import load_image_from_url
@@ -154,13 +156,13 @@ def check_admin_login(email, password):
 
 def check_in(image: np.ndarray, course_id: str):
     """
-    Records attendance using facial recognition and saves to the attendance database.
+    Điểm danh và lưu vào DB
     Parameters:
-        image (np.ndarray): Hình ảnh được tải lên từ camera
-        course_id (str): ID lớp học muốn điêm danh
+        image: Hình ảnh được tải lên từ camera
+        course_id: ID lớp học muốn điêm danh
 
     Returns:
-        dict: Results of the attendance process, including recognized students and status
+        dict: trả ra kết quả sau khi thực hiện điểm danh
     """
     attendance_results = {
         "success": False,
@@ -185,6 +187,14 @@ def check_in(image: np.ndarray, course_id: str):
 
     unrecognized = 0
     current_time = datetime.now()
+    allowed_check_in_time = course.start_time + timedelta(minutes=5)
+
+    if current_time < course.start_time:
+        attendance_results["message"] = "Lớp học chưa bắt đầu. Không thể điểm danh lúc này."
+        return attendance_results
+    elif current_time > allowed_check_in_time:
+        attendance_results["message"] = "Đã quá thời gian điểm danh cho lớp học này (5 phút sau khi bắt đầu)."
+        return attendance_results
 
     x, y, w, h = faces["bounding_box"]
     face_img = image[y:h, x:w]
@@ -194,7 +204,7 @@ def check_in(image: np.ndarray, course_id: str):
         query_embeddings=[face_embedding],
         n_results=1
     )
-    print(results)
+
     if results["distances"][0][0] < 0.5:
         user_id = results["metadatas"][0][0]["user_id"]
 
@@ -248,3 +258,35 @@ def check_in(image: np.ndarray, course_id: str):
         attendance_results["message"] = f"Không có sinh viên này!"
 
     return attendance_results
+
+def delete_attendance(student_id=None, course_id=None, date=None):
+    """
+    Xóa các bản ghi điểm danh theo điều kiện.
+
+    Parameters:
+        student_id (str): ID sinh viên cần xóa điểm danh (tùy chọn)
+        course_id (str): ID lớp học cần xóa điểm danh (tùy chọn)
+        date (datetime.date): Ngày điểm danh cần xóa (tùy chọn)
+
+    Returns:
+        dict: Thông báo kết quả
+    """
+    query = Attendance.query
+
+    if student_id:
+        query = query.filter(Attendance.student_id == student_id)
+    if course_id:
+        query = query.filter(Attendance.course_id == course_id)
+    if date:
+        date_start = datetime.combine(date, datetime.min.time())
+        date_end = datetime.combine(date, datetime.max.time())
+        query = query.filter(Attendance.attendance_time.between(date_start, date_end))
+
+    deleted_count = query.delete(synchronize_session=False)
+    db.session.commit()
+
+    return {
+        "success": True,
+        "deleted": deleted_count,
+        "message": f"Đã xóa {deleted_count} bản ghi điểm danh."
+    }

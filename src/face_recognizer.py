@@ -33,8 +33,8 @@ class FaceNet:
     def face_display(self, img: np.ndarray, face: Dict) -> None:
         """
         Hiển thị khuôn mặt được phát hiện
-        :param img (np.ndarray): hình ảnh được đọc từ OpenCV.
-        :param faces (List[Dict]): Danh sách các khuôn mặt được phát hiện.
+        :param img: hình ảnh được đọc từ OpenCV.
+        :param face: Danh sách các khuôn mặt được phát hiện.
         :return: None
         """
         # orig_h, orig_w = img.shape[:2]
@@ -64,14 +64,14 @@ class FaceNet:
     def face_embedding(self, face_img: np.ndarray) -> torch.Tensor:
         """
         Embedding hình ảnh khuôn mặt
-        :param face_img (np.ndarray): Hình ảnh khuôn mặt sau khi được cắt [y:h, x:w]
+        :param face_img: Hình ảnh khuôn mặt sau khi được cắt [y:h, x:w]
         :return: torch.Tensor: embedding của khuôn mặt
         """
         face_img = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
         face_tensor = self.mtcnn(face_img)
 
         if face_tensor is not None:
-            face_tensor = face_tensor.unsqueeze(0)
+            face_tensor = face_tensor.unsqueeze(0).to(self.device)
             with torch.no_grad():
                 embedding = self.resnet(face_tensor)[0].detach().cpu()
 

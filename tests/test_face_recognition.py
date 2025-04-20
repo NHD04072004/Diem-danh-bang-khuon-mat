@@ -4,7 +4,7 @@ import cv2
 from src.face_recognizer import FaceNet
 
 def test_face_detection(faces):
-    img = cv2.imread('../data/images/dang.jpg')
+    img = cv2.imread('du_lieu_test/dang.jpg')
     face_detections = faces.face_detection(img)
     print(face_detections)
     x, y, w, h = face_detections['bounding_box']

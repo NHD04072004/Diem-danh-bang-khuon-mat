@@ -2,7 +2,7 @@ from src import db, app, admin
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import BaseView, expose, AdminIndexView
 from flask_login import current_user, logout_user
-from src.models import *
+from src.models import User, UserRole
 from flask import redirect
 
 class AuthenticatedBaseView(BaseView):

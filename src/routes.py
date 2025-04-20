@@ -6,7 +6,10 @@ import os
 import cv2
 from src.services import *
 
-UPLOAD_FOLDER = "src/static/images"
+UPLOAD_FOLDER_ATTENDANCE = "attendance_temp"
+UPLOAD_FOLDER = 'temp'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER_ATTENDANCE, exist_ok=True)
 
 @app.route('/')
 def home():
@@ -77,6 +80,7 @@ def user_register():
         user_id = email.split('@')[0]
         if str(password) == str(confirm):
             avatar = request.files.get('avatar')
+            avatar.save(os.path.join('temp', avatar.filename))
             add_user(user_id=user_id, name=name, email=email, password=password, avatar=avatar)
             return redirect(url_for('admin'))
         else:
@@ -92,7 +96,7 @@ def attendance():
         image_file = request.files.get('file')
         file_name = image_file.filename
 
-        file_path = os.path.join(UPLOAD_FOLDER, file_name)
+        file_path = os.path.join(UPLOAD_FOLDER_ATTENDANCE, file_name)
         image_file.save(file_path)
         img = cv2.imread(file_path)
         if course_id and image_file:
